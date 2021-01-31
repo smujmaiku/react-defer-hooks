@@ -11,7 +11,7 @@ export type PromiseReloadFn = (boolean?) => void;
 export type PromiseState<T> = [...Defer<T>, PromiseReloadFn];
 
 export default function usePromise<T>(promise: () => T): PromiseState<T> {
-	const [result, success, actions] = useDefer<T>();
+	const [result, status, actions] = useDefer<T>();
 	const [time, setTime] = useState(0);
 
 	const {
@@ -45,7 +45,7 @@ export default function usePromise<T>(promise: () => T): PromiseState<T> {
 	}, [init, reset]);
 
 	return [
-		...[result, success] as Defer<T>,
+		...[result, status] as Defer<T>,
 		reload,
 	];
 }

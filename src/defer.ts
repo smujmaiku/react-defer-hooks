@@ -6,25 +6,25 @@
 
 import { useMemo, useReducer } from "react";
 
-export type DeferPending = [result: null, success: false];
-export type DeferResult<T> = [result: T, success: true];
-export type DeferReject = [result: Error, success: false];
+export type DeferPending = [result: undefined, status: false];
+export type DeferResult<T> = [result: T, status: true];
+export type DeferReject = [result: undefined, status: Error];
 
 export type Defer<T> = DeferPending | DeferResult<T> | DeferReject;
 
 export function isPending<T>(state: Defer<T>): boolean {
-	const [value, success] = state;
-	return !success && value === null;
+	const [, status] = state;
+	return status === false;
 }
 
-export function isFailed<T>(state: Defer<T>): boolean {
-	const [value, success] = state;
-	return !success && value instanceof Error;
+export function isRejected<T>(state: Defer<T>): boolean {
+	const [, status] = state;
+	return status instanceof Error;
 }
 
-export function isSuccess<T>(state: Defer<T>): boolean {
-	const [, success] = state;
-	return success;
+export function isResolved<T>(state: Defer<T>): boolean {
+	const [, status] = state;
+	return status === true;
 }
 
 export type DeferActionInit = () => void;
@@ -48,16 +48,16 @@ export type DeferReducerAction<T> = DeferReducerActionInit | DeferReducerActionR
 export function deferReducer<T>(state: Defer<T>, action: DeferReducerAction<T>): Defer<T> {
 	const [type, value] = action;
 	switch (type) {
-	case 'init':
-		return [null, false];
-	case 'reset':
-		if (state[0] instanceof Error) return [null, false];
-		return state;
-	case 'resolve':
-		if (value instanceof Function) return [value(state[0] as T), true];
-		return [value as T, true];
-	case 'reject':
-		return [value as Error, false];
+		case 'init':
+			return [undefined, false];
+		case 'reset':
+			if (state[0] instanceof Error) return [undefined, false];
+			return state;
+		case 'resolve':
+			if (value instanceof Function) return [value(state[0] as T), true];
+			return [value as T, true];
+		case 'reject':
+			return [undefined, value as Error];
 	}
 	return state;
 }
@@ -65,9 +65,9 @@ export function deferReducer<T>(state: Defer<T>, action: DeferReducerAction<T>):
 export default function useDefer<T>(initialState?: T | Error): DeferState<T> {
 	const init = useMemo<Defer<T>>(() => {
 		if (arguments.length < 1) {
-			return [null, false];
+			return [undefined, false];
 		} else if (initialState instanceof Error) {
-			return [initialState, false];
+			return [undefined, initialState];
 		}
 		return [initialState, true];
 
@@ -95,14 +95,14 @@ export default function useDefer<T>(initialState?: T | Error): DeferState<T> {
 export function all<T extends readonly any[]>(
 	list: readonly [...{ [I in keyof T]: Defer<T[I]> }],
 ): Defer<T> {
-	const [reject] = list.filter(isFailed);
-	if (reject instanceof Error) {
-		return [reject, false];
+	const rejects = list.filter(isRejected);
+	if (rejects.length > 0) {
+		return rejects[0];
 	}
 
 	const pending = list.some(isPending);
 	if (pending) {
-		return [null, false];
+		return [undefined, false];
 	}
 
 	const result = list.map(([value]) => value) as any;

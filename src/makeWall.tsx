@@ -4,7 +4,7 @@
  * MIT Licensed
  */
 
-import { Defer, isPending, isFailed } from './defer';
+import { Defer, isPending, isRejected } from './defer';
 import React, { createContext, useContext } from 'react';
 
 export interface WallPropsI<T> {
@@ -39,7 +39,7 @@ export default function makeWall<T>(): [Wall: WallFn<T>, useWall: () => T, conte
 
 		const [value] = state;
 
-		if (isFailed(state) || !validate(value as T)) {
+		if (isRejected(state) || !validate(value as T)) {
 			return failedComponent;
 		}
 
