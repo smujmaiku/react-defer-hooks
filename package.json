@@ -1,6 +1,6 @@
 {
   "name": "react-defer-hooks",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Some defer hooks",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

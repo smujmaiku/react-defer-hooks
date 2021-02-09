@@ -48,16 +48,16 @@ export type DeferReducerAction<T> = DeferReducerActionInit | DeferReducerActionR
 export function deferReducer<T>(state: Defer<T>, action: DeferReducerAction<T>): Defer<T> {
 	const [type, value] = action;
 	switch (type) {
-		case 'init':
-			return [undefined, false];
-		case 'reset':
-			if (state[0] instanceof Error) return [undefined, false];
-			return state;
-		case 'resolve':
-			if (value instanceof Function) return [value(state[0] as T), true];
-			return [value as T, true];
-		case 'reject':
-			return [undefined, value as Error];
+	case 'init':
+		return [undefined, false];
+	case 'reset':
+		if (state[0] instanceof Error) return [undefined, false];
+		return state;
+	case 'resolve':
+		if (value instanceof Function) return [value(state[0] as T), true];
+		return [value as T, true];
+	case 'reject':
+		return [undefined, value as Error];
 	}
 	return state;
 }
